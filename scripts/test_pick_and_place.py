@@ -32,19 +32,27 @@ def main():
 
   # Generate a cube
   position = [0., 0.5, 0.0]
-  orientation = [2*np.pi*npr.random_sample(), 2*np.pi*npr.random_sample(), 2*np.pi*npr.random_sample()]
+  orientation = [0, 0, np.radians(45)]
   color = [255, 0, 0]
   cube = utils.generateCube(sim_client, 'cube', position, orientation, color)
   time.sleep(2)
 
   # Execute pick on cube
-  pose = transformations.euler_matrix(*orientation)
+  pose = transformations.euler_matrix(np.pi/2, np.radians(45), np.pi/2)
   pose[:3,-1] = [0, 0.5, 0.0]
   offset = 0.2
   ur5.pick(pose, offset)
 
+  pose = transformations.euler_matrix(np.pi/2, 0.0, np.pi/2)
+  pose[:3,-1] = [0.0, 0.5, 0.5]
+  ur5.moveTo(pose)
+
+  pose = transformations.euler_matrix(np.pi/2, 0.0, np.pi/2)
+  pose[:3,-1] = [0.25, 0.25, 0.0]
+  ur5.place(pose)
+
   # Wait for arm to move the exit
-  time.sleep(5)
+  time.sleep(1)
   vrep.simxStopSimulation(sim_client, VREP_BLOCKING)
   exit()
 

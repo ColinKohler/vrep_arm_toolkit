@@ -39,22 +39,21 @@ class UR5(object):
 
     # Calculate the rotation increments
     rotation = transformations.euler_from_matrix(pose)
-    rotation_step = 0.3 if (rotation[1] - UR5_target_orientation[1] > 0) else -0.3
-    num_rotation_steps = int(np.floor((rotation[1] - UR5_target_orientation[1]) / rotation_step))
+    rotation_step = rotation - UR5_target_orientation
+    rotation_step[rotation > 0] = 0.1
+    rotation_step[rotation < 0] = -0.1
+    num_rotation_steps = np.floor((rotation - UR5_target_orientation) / rotation_step).astype(np.int)
 
-    # Move the target pose over the intermediate steps
-    for i in range(num_move_steps):
-      utils.setObjectPosition(self.sim_client, self.UR5_target, UR5_target_position + move_step)
-      sim_ret, UR5_target_position = utils.getObjectPosition(self.sim_client, self.UR5_target)
-    utils.setObjectPosition(self.sim_client, self.UR5_target, pose[:3,-1].tolist())
-
-    # Rotate to the target orientation
-    for i in range(num_rotation_steps):
-      rot = [np.pi/2, UR5_target_orientation[1] + rotation_step, np.pi/2]
+    # Move and rotate to the target pose
+    for i in range(max(num_move_steps, np.max(num_rotation_steps))):
+      pos = UR5_target_position + move_step*min(i, num_move_steps)
+      rot = [UR5_target_orientation[0]+rotation_step[0]*min(i, num_rotation_steps[0]),
+             UR5_target_orientation[1]+rotation_step[1]*min(i, num_rotation_steps[1]),
+             UR5_target_orientation[2]+rotation_step[2]*min(i, num_rotation_steps[2])]
+      utils.setObjectPosition(self.sim_client, self.UR5_target, pos)
       utils.setObjectOrientation(self.sim_client, self.UR5_target, rot)
-      sim_ret, UR5_target_orientation = utils.getObjectOrientation(self.sim_client, self.UR5_target)
-    utils.setObjectOrientation(self.sim_client, self.UR5_target, [np.pi/2, rotation[1], np.pi/2])
-
+    utils.setObjectPosition(self.sim_client, self.UR5_target, pose[:3,-1].tolist())
+    utils.setObjectOrientation(self.sim_client, self.UR5_target, rotation)
 
   # Attempts to execute a pick at the given pose
   # Returns: True if pick was successful, False otherwise
@@ -72,4 +71,5 @@ class UR5(object):
 
   # Attempts to execute a place at the given pose
   def place(self, pose):
-    pass
+    self.moveTo(pose)
+    self.openGripper()
