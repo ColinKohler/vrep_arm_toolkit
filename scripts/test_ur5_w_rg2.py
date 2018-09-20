@@ -13,6 +13,7 @@ def main():
   # Attempt to connect to simulator
   vrep.simxFinish(-1)
   sim_client = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
+  print sim_client
   if sim_client == -1:
     print 'Failed to connect to simulation. Exiting...'
     exit()

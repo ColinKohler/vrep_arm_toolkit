@@ -1,9 +1,8 @@
 import sys
 import numpy as np
 
-sys.path.append('..')
-from simulation import vrep
-import utils.vrep_utils as utils
+from vrep_arm_toolkit.simulation import vrep
+import vrep_arm_toolkit.utils.vrep_utils as utils
 
 VREP_BLOCKING = vrep.simx_opmode_blocking
 
@@ -50,7 +49,7 @@ class VisionSensor(object):
       sim_ret, resolution, depth_buffer = vrep.simxGetVisionSensorDepthBuffer(self.sim_client, self.sensor, VREP_BLOCKING)
       depth_img = np.asarray(depth_buffer)
       depth_img.shape = (resolution[1], resolution[0])
-      depth_img = np.fliplr(depth_img)
+      # depth_img = np.fliplr(depth_img)
       depth_img = depth_img * (self.z_far - self.z_near) + self.z_near
       data['depth'] = depth_img
 

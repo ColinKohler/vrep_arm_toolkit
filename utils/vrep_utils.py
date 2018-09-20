@@ -2,11 +2,10 @@ import sys
 import os
 import numpy as np
 
-sys.path.append('..')
 import transformations
-from simulation import vrep
+from vrep_arm_toolkit.simulation import vrep
 
-OBJECT_MESH_DIR = os.path.abspath('../simulation/objects/blocks/')
+OBJECT_MESH_DIR = '/home/colin/workspace/machine_learning_experiments/robotic_rl/vrep_arm_toolkit/simulation/objects/blocks/'
 
 VREP_BLOCKING = vrep.simx_opmode_blocking
 VREP_CHILD_SCRIPT = vrep.sim_scripttype_childscript
@@ -20,7 +19,6 @@ def generateCube(sim_client, name, position, orientation, color=[255., 255., 255
                                         list(), position + orientation + color, [cube_mesh_file, name],
                                         bytearray(), VREP_BLOCKING)
   if sim_ret[0] == 8:
-    exit()
     return None
   else:
     return sim_ret[1][0]

@@ -1,11 +1,11 @@
+import os
 import sys
 import time
 import numpy as np
 
-sys.path.append('..')
 from simulation import vrep
-import utils.vrep_utils as utils
-from utils import transformations
+import vrep_arm_toolkit.utils.vrep_utils as utils
+from vrep_arm_toolkit.utils import transformations
 
 class UR5(object):
   def __init__(self, sim_client, gripper):
@@ -67,9 +67,16 @@ class UR5(object):
     is_fully_closed = self.closeGripper()
     self.moveTo(pre_grasp_pose)
 
+    is_full_closed = self.closeGripper()
+
     return not is_fully_closed
 
   # Attempts to execute a place at the given pose
-  def place(self, pose):
-    self.moveTo(pose)
+  def place(self, drop_pose, offset):
+    pre_drop_pose = np.copy(drop_pose)
+    pre_drop_pose[2,-1] += offset
+
+    self.moveTo(pre_drop_pose)
+    self.moveTo(drop_pose)
     self.openGripper()
+    self.moveTo(pre_drop_pose)
