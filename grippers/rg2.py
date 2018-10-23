@@ -33,9 +33,14 @@ class RG2(object):
     utils.setJointTargetVelocity(self.sim_client, self.gripper_joint, self.open_velocity)
 
     # Wait until gripper is fully open
-    p1 = utils.getJointPosition(self.sim_client, self.gripper_joint)
+    sim_ret, p1 = utils.getJointPosition(self.sim_client, self.gripper_joint)
+    i = 0
     while p1 < 0.0536:
-      p1 = utils.getJointPosition(self.sim_client, self.gripper_joint)
+      sim_ret, p1 = utils.getJointPosition(self.sim_client, self.gripper_joint)
+      i += 1
+
+      if i > 25:
+        break
 
   # Close the gripper
   # Returns: True if gripper is fully closed, False otherwise

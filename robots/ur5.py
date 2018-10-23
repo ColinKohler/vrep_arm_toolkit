@@ -3,7 +3,7 @@ import sys
 import time
 import numpy as np
 
-from simulation import vrep
+from vrep_arm_toolkit.simulation import vrep
 import vrep_arm_toolkit.utils.vrep_utils as utils
 from vrep_arm_toolkit.utils import transformations
 
@@ -15,6 +15,11 @@ class UR5(object):
     # Create handles to the UR5 target and tip which control IK control
     sim_ret, self.UR5_target = utils.getObjectHandle(self.sim_client, 'UR5_target')
     sim_ret, self.gripper_tip = utils.getObjectHandle(self.sim_client, 'UR5_tip')
+
+  # Get the current end effector pose
+  def getEndEffectorPose(self):
+    sim_ret, pose = utils.getObjectPose(self.sim_client, self.UR5_target)
+    return pose
 
   # Opens the gripper
   def openGripper(self):
@@ -34,11 +39,11 @@ class UR5(object):
     # Calculate the movement increments
     move_direction = pose[:3,-1] - UR5_target_position
     move_magnitude = np.linalg.norm(move_direction)
-    move_step = 0.02 * move_direction / move_magnitude
-    num_move_steps = int(np.floor(move_magnitude / 0.02))
+    move_step = 0.01 * move_direction / move_magnitude
+    num_move_steps = int(np.floor(move_magnitude / 0.01))
 
     # Calculate the rotation increments
-    rotation = transformations.euler_from_matrix(pose)
+    rotation = np.asarray(transformations.euler_from_matrix(pose))
     rotation_step = rotation - UR5_target_orientation
     rotation_step[rotation > 0] = 0.1
     rotation_step[rotation < 0] = -0.1

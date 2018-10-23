@@ -3,7 +3,7 @@ import struct
 import sys
 import os
 import ctypes as ct
-from vrepConst import *
+from vrep_arm_toolkit.simulation.vrepConst import *
 
 #load library
 libsimx = None
