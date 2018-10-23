@@ -8,6 +8,14 @@ import vrep_arm_toolkit.utils.vrep_utils as utils
 from vrep_arm_toolkit.utils import transformations
 
 class UR5(object):
+  '''
+  VRep UR5 robot class. Works with any gripper included in this package.
+  Currently only does IK control.
+
+  Args:
+    - sim_client: VRep client object to communicate with simulator over
+    - gripper: Gripper which is attached to UR5 in simulator. Must be included in 'grippers'
+    '''
   def __init__(self, sim_client, gripper):
     self.sim_client = sim_client
     self.gripper = gripper
@@ -16,22 +24,36 @@ class UR5(object):
     sim_ret, self.UR5_target = utils.getObjectHandle(self.sim_client, 'UR5_target')
     sim_ret, self.gripper_tip = utils.getObjectHandle(self.sim_client, 'UR5_tip')
 
-  # Get the current end effector pose
   def getEndEffectorPose(self):
+    '''
+    Get the current end effector pose
+
+    Returns: 4D pose of the gripper
+    '''
     sim_ret, pose = utils.getObjectPose(self.sim_client, self.UR5_target)
     return pose
 
-  # Opens the gripper
   def openGripper(self):
+    '''
+    Opens the gripper as much as is possible
+    '''
     self.gripper.open()
 
-  # Closes the gripper
-  # Returns: True if gripper is fully closed, False otherwise
   def closeGripper(self):
+    '''
+    Closes the gripper as much as is possible
+
+    Returns: True if gripper is fully closed, False otherwise
+    '''
     return self.gripper.close()
 
-  # Moves the tip of the gripper to the target pose
   def moveTo(self, pose):
+    '''
+    Moves the tip of the gripper to the target pose
+
+    Args:
+      - pose: 4D target pose
+    '''
     # Get current position and orientation of UR5 target
     sim_ret, UR5_target_position = utils.getObjectPosition(self.sim_client, self.UR5_target)
     sim_ret, UR5_target_orientation = utils.getObjectOrientation(self.sim_client, self.UR5_target)
@@ -60,10 +82,18 @@ class UR5(object):
     utils.setObjectPosition(self.sim_client, self.UR5_target, pose[:3,-1].tolist())
     utils.setObjectOrientation(self.sim_client, self.UR5_target, rotation)
 
-  # Attempts to execute a pick at the given pose
-  # Returns: True if pick was successful, False otherwise
   def pick(self, grasp_pose, offset):
+    '''
+    Attempts to execute a pick at the target pose
+
+    Args:
+      - grasp_pose: 4D pose to execture grasp at
+      - offset: Grasp offset for pre-grasp pose
+
+    Returns: True if pick was successful, False otherwise
+    '''
     pre_grasp_pose = np.copy(grasp_pose)
+    # TODO: offset should be along approach vector. Currently just the z component.
     pre_grasp_pose[2,-1] += offset
 
     self.openGripper()
@@ -76,8 +106,14 @@ class UR5(object):
 
     return not is_fully_closed
 
-  # Attempts to execute a place at the given pose
   def place(self, drop_pose, offset):
+    '''
+    Attempts to execute a place at the target pose
+
+    Args:
+      - drop_pose: 4D pose to place object at
+      - offset: Grasp offset for pre-grasp pose
+    '''
     pre_drop_pose = np.copy(drop_pose)
     pre_drop_pose[2,-1] += offset
 
