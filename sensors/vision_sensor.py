@@ -41,7 +41,7 @@ class VisionSensor(object):
     '''
     data = dict()
 
-    if self.rgb:
+    if self.get_rgb:
       sim_ret, resolution, raw_image = vrep.simxGetVisionSensorImage(self.sim_client, self.sensor, 0, VREP_BLOCKING)
       color_img = np.asarray(raw_image)
       color_img.shape = (resolution[1], resolution[0], 3)
@@ -52,7 +52,7 @@ class VisionSensor(object):
       color_img = color_img.astype(np.uint8)
       data['rgb'] = color_img
 
-    if self.depth:
+    if self.get_depth:
       sim_ret, resolution, depth_buffer = vrep.simxGetVisionSensorDepthBuffer(self.sim_client, self.sensor, VREP_BLOCKING)
       depth_img = np.asarray(depth_buffer)
       depth_img.shape = (resolution[1], resolution[0])

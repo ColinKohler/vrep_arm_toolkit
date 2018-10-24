@@ -6,7 +6,7 @@ import vrep_arm_toolkit.utils.vrep_utils as utils
 class RG2(object):
   def __init__(self, sim_client,
                      open_force=20., open_velocity=0.5,
-                     close_force=100., close_veloicty=-0.5):
+                     close_force=100., close_velocity=-0.5):
     '''
     VRep RG2 gripper class.
     Currently only does torque control.
