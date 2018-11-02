@@ -79,8 +79,6 @@ class UR5(object):
              UR5_target_orientation[2]+rotation_step[2]*min(i, num_rotation_steps[2])]
       utils.setObjectPosition(self.sim_client, self.UR5_target, pos)
       utils.setObjectOrientation(self.sim_client, self.UR5_target, rot)
-    utils.setObjectPosition(self.sim_client, self.UR5_target, pose[:3,-1].tolist())
-    utils.setObjectOrientation(self.sim_client, self.UR5_target, rotation)
 
   def pick(self, grasp_pose, offset):
     '''

@@ -5,8 +5,6 @@ import numpy as np
 from vrep_arm_toolkit.utils import transformations
 from vrep_arm_toolkit.simulation import vrep
 
-OBJECT_MESH_DIR = '/home/colin/workspace/machine_learning_experiments/robotic_rl/vrep_arm_toolkit/simulation/objects/blocks/'
-
 VREP_BLOCKING = vrep.simx_opmode_blocking
 VREP_ONESHOT = vrep.simx_opmode_oneshot_wait
 VREP_CHILD_SCRIPT = vrep.sim_scripttype_childscript
@@ -45,14 +43,51 @@ def restartSimulation(sim_client):
 #                                         Scrip API calls                                        #
 #------------------------------------------------------------------------------------------------#
 
-# Attempts to generate a cube at the given pose
-# Returns: Object handle if successful, None otherwise
-# NOTE: This requires your simulation to have the dummy 'remoteAPICommandServer' in 'simulation/sensor_example.ttt' in your simulation
-def generateCube(sim_client, name, size, position, orientation, mass, color=[255., 255., 255.]):
-  cube_mesh_file = os.path.join(OBJECT_MESH_DIR, '4.obj')
-  sim_ret = vrep.simxCallScriptFunction(sim_client, 'remoteApiCommandServer', VREP_CHILD_SCRIPT, 'createShape',
-                                        [0], size + position + orientation + color + [mass], [name],
+def generateShape(sim_client, name, shape_type, size, position,
+                  orientation, mass, color=[255., 255., 255.]):
+  '''
+  Attempts to generate the desired shape in the vrep simulation. This requires the 'createShape' function
+  to be in the 'remoteAPICommandServer' dummy object in the vrep simulation. See 'simulation/sensor_example.ttt'.
+
+  Args:
+    - sim_client: vrep client object attached to the desired simulation
+    - name: Name of the object to be created
+    - shape_type: Type of shape to be generate (0: cuboid, 1: sphere, 2: cylinder, 3: cone)
+    - size: List of 3 floats describing the shape size
+    - position: List of [x, y, z] floats to generate object at
+    - orientation: List of euler floats describing object orientation
+    - mass: The mass of the object to generate
+    - color: Color of the shape to generate
+
+  Returns: object handle if successful, None otherwise
+  '''
+  sim_ret = vrep.simxCallScriptFunction(sim_client, 'remoteApiCommandServer', VREP_CHILD_SCRIPT,
+                                        'createShape', [shape_type],
+                                        size + position + orientation + color + [mass], [name],
                                         bytearray(), VREP_BLOCKING)
+  if sim_ret[0] == 8:
+    return None
+  else:
+    return sim_ret[1][0]
+
+def importShape(sim_client, name, mesh_file, position, orientation, color=[255., 255., 255.]):
+  '''
+  Attempts to import the desired mesh in the vrep simulation. This requires the 'importShape' function
+  to be in the 'remoteAPICommandServer' dummy object in the vrep simulation. See 'simulation/sensor_example.ttt'.
+
+  Args:
+    - sim_client: vrep client object attached to the desired simulation
+    - name: Name of the object to be created
+    - mesh_file: Path to the mesh to be imported
+    - position: List of [x, y, z] floats to generate object at
+    - orientation: List of euler floats describing object orientation
+    - color: Color of the shape to generate
+
+  Returns: object handle if successful, None otherwise
+  '''
+  sim_ret = vrep.simxCallScriptFunction(sim_client, 'remoteApiCommandServer', VREP_CHILD_SCRIPT,
+                                        'importShape', [], position + orientation + color,
+                                        [mesh_file, name], bytearray(), VREP_BLOCKING)
   if sim_ret[0] == 8:
     return None
   else:
