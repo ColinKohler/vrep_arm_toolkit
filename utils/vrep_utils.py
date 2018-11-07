@@ -9,6 +9,7 @@ VREP_BLOCKING = vrep.simx_opmode_blocking
 VREP_ONESHOT = vrep.simx_opmode_oneshot_wait
 VREP_CHILD_SCRIPT = vrep.sim_scripttype_childscript
 
+OBJ_FLOAT_PARAM_BBOX_MAX_Z = 26
 
 #------------------------------------------------------------------------------------------------#
 #                                       Simulation Control                                       #
@@ -132,6 +133,9 @@ def getObjectOrientation(sim_client, obj_handle):
 # Sets an object to a given orientation
 def setObjectOrientation(sim_client, obj_handle, orientation):
   return vrep.simxSetObjectOrientation(sim_client, obj_handle, -1, orientation, VREP_BLOCKING)
+
+def getObjectMaxZ(sim_client, obj_handle):
+  return vrep.simxGetObjectFloatParameter(sim_client, obj_handle, OBJ_FLOAT_PARAM_BBOX_MAX_Z, VREP_BLOCKING)
 
 #------------------------------------------------------------------------------------------------#
 #                                       Joint Helpers                                            #
