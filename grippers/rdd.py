@@ -9,8 +9,8 @@ VREP_BLOCKING = vrep.simx_opmode_blocking
 
 class RDD(object):
   def __init__(self, sim_client,
-               open_force=20., open_velocity=0.5,
-               close_force=100, close_velocity=0.5):
+               open_force=20., open_velocity=1.,
+               close_force=200., close_velocity=1.):
     """
     VRep RDD gripper class
     Currently only does torque control.
@@ -35,8 +35,8 @@ class RDD(object):
     self.joint_limit_narrow = (-1.04, -0.04)
     self.joint_limit_wide = (0.04, 1.04)
 
-    self.finger_joint_narrow = Joint(sim_client, 'narrow_finger_joint')
-    self.finger_joint_wide = Joint(sim_client, 'wide_finger_joint')
+    self.finger_joint_narrow = Joint(sim_client, 'RDD_narrow_finger_joint')
+    self.finger_joint_wide = Joint(sim_client, 'RDD_wide_finger_joint')
 
   def open(self):
     """

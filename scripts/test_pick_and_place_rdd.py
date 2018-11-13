@@ -33,25 +33,22 @@ def main():
   size = [0.05, 0.05, 0.05]
   mass = 0.1
   color = [255, 0, 0]
-  OBJECT_MESH_DIR = '/home/ur5/Software/vrep_arm_toolkit/simulation/objects/blocks/'
-  cube_mesh_file = os.path.join(OBJECT_MESH_DIR, '4.obj')
-  cube = utils.importShape(sim_client, 'cube', cube_mesh_file, position, orientation, color)
-  # cube = utils.generateShape(sim_client, 'cube', 0, size, position, orientation, mass, color)
+  cube = utils.generateShape(sim_client, 'cube', 0, size, position, orientation, mass, color)
   time.sleep(2)
 
   # Execute pick on cube
-  pose = transformations.euler_matrix(np.radians(90), 0, np.radians(90))
+  pose = transformations.euler_matrix(np.radians(-90), 0, np.radians(90))
   pose[:3,-1] = [0, 0.5, 0.0]
   offset = 0.2
   ur5.pick(pose, offset)
 
-  pose = transformations.euler_matrix(np.radians(90), 0, np.radians(90))
-  pose = transformations.euler_matrix(np.pi/2, 0.0, np.pi/2)
+  pose = transformations.euler_matrix(np.radians(-90), 0, np.radians(90))
+  # pose = transformations.euler_matrix(np.pi/2, 0.0, np.pi/2)
   pose[:3,-1] = [0.0, 0.5, 0.5]
   ur5.moveTo(pose)
 
-  pose = transformations.euler_matrix(np.radians(90), 0, np.radians(90))
-  pose = transformations.euler_matrix(np.pi/2, 0.0, np.pi/2)
+  pose = transformations.euler_matrix(np.radians(-90), 0, np.radians(90))
+  # pose = transformations.euler_matrix(np.pi/2, 0.0, np.pi/2)
   pose[:3,-1] = [0.25, 0.25, 0.0]
   ur5.place(pose, offset)
 
