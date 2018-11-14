@@ -8,6 +8,9 @@ from vrep_arm_toolkit.joints.joint import Joint
 VREP_BLOCKING = vrep.simx_opmode_blocking
 
 class RDD(object):
+  WIDE = 0
+  NARROW = 1
+
   def __init__(self, sim_client,
                open_force=20., open_velocity=1.,
                close_force=200., close_velocity=1.):
@@ -58,6 +61,29 @@ class RDD(object):
 
       if i > 25:
         break
+
+  def openFinger(self, finger):
+    if finger is RDD.WIDE:
+      self.finger_joint_wide.setJointForce(self.open_force)
+      self.finger_joint_wide.setJointTargetVelocity(self.open_velocity_wide)
+      p_wide = self.finger_joint_wide.getJointPosition()
+      i = 0
+      while p_wide < self.joint_limit_wide[1]:
+        p_wide = self.finger_joint_wide.getJointPosition()
+        i += 1
+        if i > 25:
+          break
+
+    else:
+      self.finger_joint_narrow.setJointForce(self.open_force)
+      self.finger_joint_narrow.setJointTargetVelocity(self.open_velocity_narrow)
+      p_narrow = self.finger_joint_narrow.getJointPosition()
+      i = 0
+      while p_narrow > self.joint_limit_narrow[0]:
+        p_narrow = self.finger_joint_narrow.getJointPosition()
+        i += 1
+        if i > 25:
+          break
 
   def close(self):
     """
