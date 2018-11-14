@@ -24,6 +24,45 @@ class UR5(object):
     sim_ret, self.UR5_target = utils.getObjectHandle(self.sim_client, 'UR5_target')
     sim_ret, self.gripper_tip = utils.getObjectHandle(self.sim_client, 'UR5_tip')
 
+    sim_ret, self.robot = utils.getObjectHandle(self.sim_client, 'UR5')
+
+    sim_ret, self.joint1 = utils.getObjectHandle(self.sim_client, 'UR5_joint1')
+    sim_ret, self.joint2 = utils.getObjectHandle(self.sim_client, 'UR5_joint2')
+    sim_ret, self.joint3 = utils.getObjectHandle(self.sim_client, 'UR5_joint3')
+    sim_ret, self.joint4 = utils.getObjectHandle(self.sim_client, 'UR5_joint4')
+    sim_ret, self.joint5 = utils.getObjectHandle(self.sim_client, 'UR5_joint5')
+    sim_ret, self.joint6 = utils.getObjectHandle(self.sim_client, 'UR5_joint6')
+    self.joints = [self.joint1, self.joint2, self.joint3, self.joint4, self.joint5, self.joint6]
+
+  def getJointPosition(self):
+    joint_value = []
+    for joint in self.joints:
+      sim_ret, p = utils.getJointPosition(self.sim_client, joint)
+      joint_value.append(p)
+    return joint_value
+
+  def setJointPosition(self, joint_value):
+    vrep.simxPauseCommunication(self.sim_client, True)
+    for i in range(6):
+      vrep.simxSetJointPosition(self.sim_client, self.joints[i], joint_value[i], vrep.simx_opmode_oneshot)
+    vrep.simxPauseCommunication(self.sim_client, False)
+
+  def setJointTargetPosition(self, joint_value):
+    for i in range(6):
+      vrep.simxSetJointTargetPosition(self.sim_client, self.joints[i], joint_value[i], vrep.simx_opmode_oneshot)
+
+  def followPath(self, path):
+    for i in range(6):
+      utils.setJointTargetVelocity(self.sim_client, self.joints[i], 0)
+
+    for traj in path:
+      self.setJointTargetPosition(traj)
+      current_joint_pos = self.getJointPosition()
+      while np.linalg.norm(np.array(current_joint_pos) - np.array(traj)) > 0.01:
+        # time.sleep(0.01)
+        current_joint_pos = self.getJointPosition()
+
+
   def getEndEffectorPose(self):
     '''
     Get the current end effector pose
@@ -67,7 +106,7 @@ class UR5(object):
     # Calculate the rotation increments
     rotation = np.asarray(transformations.euler_from_matrix(pose))
     rotation_step = rotation - UR5_target_orientation
-    rotation_step[rotation > 0] = 0.1
+    rotation_step[rotation >= 0] = 0.1
     rotation_step[rotation < 0] = -0.1
     num_rotation_steps = np.floor((rotation - UR5_target_orientation) / rotation_step).astype(np.int)
 
