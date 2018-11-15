@@ -63,13 +63,17 @@ class UR5(object):
       vrep.simxSetJointTargetPosition(self.sim_client, self.joints[i], joint_value[i], vrep.simx_opmode_oneshot)
 
   def followPath(self, path):
-    for i in range(6):
-      utils.setJointTargetVelocity(self.sim_client, self.joints[i], 0)
-
     for traj in path:
       self.setJointTargetPosition(traj)
-      while np.linalg.norm(np.array(self.joint_value) - np.array(traj)) > 0.01:
-        time.sleep(0.01)
+      i = 0
+      while np.linalg.norm(np.array(self.joint_value) - np.array(traj)) > 0.1:
+        print i
+        i+=1
+        continue
+      #   print self.joint_value
+      # while np.linalg.norm(np.array(self.getJointPosition()) - np.array(traj)) > 0.01:
+      #   print self.getJointPosition()
+      #   rospy.sleep(0.01)
 
 
   def getEndEffectorPose(self):
@@ -78,8 +82,14 @@ class UR5(object):
 
     Returns: 4D pose of the gripper
     '''
-    sim_ret, pose = utils.getObjectPose(self.sim_client, self.UR5_target)
+    sim_ret, pose = utils.getObjectPose(self.sim_client, self.gripper_tip)
     return pose
+
+  def setTargetPose(self, pose):
+    position = pose[:3, -1]
+    orientation = np.asarray(transformations.euler_from_matrix(pose))
+    utils.setObjectPosition(self.sim_client, self.UR5_target, position)
+    utils.setObjectOrientation(self.sim_client, self.UR5_target, orientation)
 
   def openGripper(self):
     '''

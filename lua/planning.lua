@@ -1,3 +1,37 @@
+function sysCall_init()
+        
+    -- Get some handles:
+    joint1=sim.getObjectHandle('UR5_joint1')
+    joint2=sim.getObjectHandle('UR5_joint2')
+    joint3=sim.getObjectHandle('UR5_joint3')
+    joint4=sim.getObjectHandle('UR5_joint4')
+    joint5=sim.getObjectHandle('UR5_joint5')
+    joint6=sim.getObjectHandle('UR5_joint6')
+
+    jointHandles={joint1,joint2,joint3,joint4,joint5,joint6}
+
+    ikGroup=sim.getIkGroupHandle('UR5')
+    ikTip=sim.getObjectHandle('UR5_tip')
+    ikTarget=sim.getObjectHandle('UR5_target')
+    collisionPairs={sim.getCollectionHandle('UR5'),sim.getCollectionHandle('not_UR5')}
+
+    minConfigsForIkPath=2
+end
+
+generateIkPath=function()
+    -- Generates (if possible) a linear, collision free path between a robot config and a target pose
+    local c=sim.generateIkPath(ikGroup,jointHandles,minConfigsForIkPath,collisionPairs)
+    return c
+end
+
+findIkPath=function(inInts,inFloats,inStrings,inBuffer)
+    local path=generateIkPath()
+    if not path then
+        return {0},{},{},''
+    end
+    return {#path},path,{},''
+end
+
 getConfig=function(jointHandles)
     local config={}
     for i=1,#jointHandles,1 do
@@ -128,16 +162,6 @@ findShortestPath=function(task,goalConfigs)
     return path
 end
 
-generateIkPath=function(startConfig,goalPose,task)
-    -- Generates (if possible) a linear, collision free path between a robot config and a target pose
-    local currentConfig=getConfig(task.jh)
-    setConfig(task.jh,startConfig)
-    sim.setObjectMatrix(task.ikTarget,-1,goalPose)
-    local c=sim.generateIkPath(task.ikGroup,task.jh,task.minConfigsForIkPath,task.collisionPairs)
-    setConfig(task.jh,currentConfig)
-    return c
-end
-
 getReversedPath=function(path)
     local retPath={}
     local ptCnt=#path/6
@@ -195,4 +219,3 @@ findPathForPoseGoal=function(inInts,inFloats,inStrings,inBuffer)
     end
     return {0},{},{},''
 end
-

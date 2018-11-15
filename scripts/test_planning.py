@@ -25,9 +25,13 @@ ur5 = UR5(sim_client, None)
 emptyBuff = bytearray()
 
 current_pos = ur5.getEndEffectorPose()
-target_pos = current_pos
-target_pos[2, -1] -= 0.1
-target_pos = target_pos.flatten().tolist()[:-4]
+ur5.setTargetPose(current_pos)
+
+target_pos = current_pos.copy()
+target_pos[2, -1] -= 0.2
+
+ur5.setTargetPose(target_pos)
+# target_pos = target_pos.flatten().tolist()[:-4]
 
 maxConfigsForDesiredPose = 10  # we will try to find 10 different states corresponding to the goal pose and order them according to distance from initial state
 maxTrialsForConfigSearch = 300  # a parameter needed for finding appropriate goal states
@@ -54,13 +58,16 @@ collisionChecking = 0  # whether collision checking is on or off
 #   path1 = path[:part1StateCnt * 6]
 
 # Find a linear path that runs through several poses:
-inInts = [ur5.robot, collisionChecking, minConfigsForIkPath]
-inFloats = ur5.getJointPosition() + target_pos
+
+inInts = []
+inFloats = []
 res, retInts, path, retStrings, retBuffer = vrep.simxCallScriptFunction(sim_client, 'remoteApiCommandServer',
                                                                         vrep.sim_scripttype_childscript, 'findIkPath',
                                                                         inInts, inFloats, [], emptyBuff,
                                                                         VREP_BLOCKING)
 if (res==0) and len(path)>0:
+  # print ur5.getJointPosition()
+  # print ur5.joint_value
 
   path = np.reshape(np.array(path), (-1, 6))
   ur5.followPath(path)
