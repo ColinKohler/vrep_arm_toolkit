@@ -6,7 +6,11 @@ import numpy as np
 from vrep_arm_toolkit.simulation import vrep
 import vrep_arm_toolkit.utils.vrep_utils as utils
 from vrep_arm_toolkit.utils import transformations
-from vrep_arm_toolkit.robots.ur5 import UR5
+from vrep_arm_toolkit.robots.ur5_joint_control import UR5
+
+import rospy
+
+rospy.init_node('vrep_node')
 
 VREP_BLOCKING = vrep.simx_opmode_blocking
 

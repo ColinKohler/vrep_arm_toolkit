@@ -7,10 +7,14 @@ from vrep_arm_toolkit.simulation import vrep
 import vrep_arm_toolkit.utils.vrep_utils as utils
 from vrep_arm_toolkit.utils import transformations
 
+import rospy
+from sensor_msgs.msg import JointState
+
 class UR5(object):
   '''
   VRep UR5 robot class. Works with any gripper included in this package.
   Currently only does IK control.
+
   Args:
     - sim_client: VRep client object to communicate with simulator over
     - gripper: Gripper which is attached to UR5 in simulator. Must be included in 'grippers'
@@ -22,10 +26,56 @@ class UR5(object):
     # Create handles to the UR5 target and tip which control IK control
     sim_ret, self.UR5_target = utils.getObjectHandle(self.sim_client, 'UR5_target')
     sim_ret, self.gripper_tip = utils.getObjectHandle(self.sim_client, 'UR5_tip')
+    sim_ret, self.robot = utils.getObjectHandle(self.sim_client, 'UR5')
+
+    sim_ret, self.joint1 = utils.getObjectHandle(self.sim_client, 'UR5_joint1')
+    sim_ret, self.joint2 = utils.getObjectHandle(self.sim_client, 'UR5_joint2')
+    sim_ret, self.joint3 = utils.getObjectHandle(self.sim_client, 'UR5_joint3')
+    sim_ret, self.joint4 = utils.getObjectHandle(self.sim_client, 'UR5_joint4')
+    sim_ret, self.joint5 = utils.getObjectHandle(self.sim_client, 'UR5_joint5')
+    sim_ret, self.joint6 = utils.getObjectHandle(self.sim_client, 'UR5_joint6')
+    self.joints = [self.joint1, self.joint2, self.joint3, self.joint4, self.joint5, self.joint6]
+
+    self.joint_value = None
+    self.joint_state_sub = rospy.Subscriber('/sim/joint_state', JointState, self.jointStateCallback, queue_size=1)
+
+    while self.joint_value is None:
+      print 'Waiting for joint values'
+
+  def jointStateCallback(self, msg):
+    self.joint_value = msg.position
+
+  def getJointPosition(self):
+    joint_value = []
+    for joint in self.joints:
+      sim_ret, p = utils.getJointPosition(self.sim_client, joint)
+      joint_value.append(p)
+    return joint_value
+
+  def setJointPosition(self, joint_value):
+    vrep.simxPauseCommunication(self.sim_client, True)
+    for i in range(6):
+      vrep.simxSetJointPosition(self.sim_client, self.joints[i], joint_value[i], vrep.simx_opmode_oneshot)
+    vrep.simxPauseCommunication(self.sim_client, False)
+
+  def setJointTargetPosition(self, joint_value):
+    for i in range(6):
+      vrep.simxSetJointTargetPosition(self.sim_client, self.joints[i], joint_value[i], vrep.simx_opmode_oneshot)
+
+  def followPath(self, path):
+    for i in range(6):
+      utils.setJointTargetVelocity(self.sim_client, self.joints[i], 0)
+
+    for traj in path:
+      self.setJointTargetPosition(traj)
+      while np.linalg.norm(np.array(self.joint_value) - np.array(traj)) > 0.01:
+        time.sleep(0.01)
+
 
   def getEndEffectorPose(self):
     '''
     Get the current end effector pose
+
     Returns: 4D pose of the gripper
     '''
     sim_ret, pose = utils.getObjectPose(self.sim_client, self.UR5_target)
@@ -40,6 +90,7 @@ class UR5(object):
   def closeGripper(self):
     '''
     Closes the gripper as much as is possible
+
     Returns: True if gripper is fully closed, False otherwise
     '''
     return self.gripper.close()
@@ -47,6 +98,7 @@ class UR5(object):
   def moveTo(self, pose):
     '''
     Moves the tip of the gripper to the target pose
+
     Args:
       - pose: 4D target pose
     '''
@@ -63,7 +115,7 @@ class UR5(object):
     # Calculate the rotation increments
     rotation = np.asarray(transformations.euler_from_matrix(pose))
     rotation_step = rotation - UR5_target_orientation
-    rotation_step[rotation > 0] = 0.1
+    rotation_step[rotation >= 0] = 0.1
     rotation_step[rotation < 0] = -0.1
     num_rotation_steps = np.floor((rotation - UR5_target_orientation) / rotation_step).astype(np.int)
 
@@ -79,9 +131,11 @@ class UR5(object):
   def pick(self, grasp_pose, offset):
     '''
     Attempts to execute a pick at the target pose
+
     Args:
       - grasp_pose: 4D pose to execture grasp at
       - offset: Grasp offset for pre-grasp pose
+
     Returns: True if pick was successful, False otherwise
     '''
     pre_grasp_pose = np.copy(grasp_pose)
@@ -101,6 +155,7 @@ class UR5(object):
   def place(self, drop_pose, offset):
     '''
     Attempts to execute a place at the target pose
+
     Args:
       - drop_pose: 4D pose to place object at
       - offset: Grasp offset for pre-grasp pose
@@ -111,4 +166,4 @@ class UR5(object):
     self.moveTo(pre_drop_pose)
     self.moveTo(drop_pose)
     self.openGripper()
-self.moveTo(pre_drop_pose)
+    self.moveTo(pre_drop_pose)
