@@ -111,4 +111,4 @@ class UR5(object):
     self.moveTo(pre_drop_pose)
     self.moveTo(drop_pose)
     self.openGripper()
-self.moveTo(pre_drop_pose)
+    self.moveTo(pre_drop_pose)

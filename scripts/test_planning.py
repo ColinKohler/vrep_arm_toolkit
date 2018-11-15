@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
   current_pos = ur5.getEndEffectorPose()
   target_pos = current_pos.copy()
-  target_pos[2, -1] -= 0.2
+  target_pos[1, -1] += 0.3
 
   path = findIkPath(sim_client, target_pos)
   if len(path)>0:

@@ -6,7 +6,6 @@ import numpy as np
 from vrep_arm_toolkit.simulation import vrep
 import vrep_arm_toolkit.utils.vrep_utils as utils
 from vrep_arm_toolkit.utils import transformations
-from vrep_arm_toolkit.robots.ur5_joint_control import UR5
 
 VREP_BLOCKING = vrep.simx_opmode_blocking
 EMPTY_BUFF = bytearray()
@@ -21,7 +20,7 @@ def findIkPath(sim_client, target_pose):
   target_pose = target_pose.flatten().tolist()[:-4]
   inInts = []
   inFloats = target_pose
-  res, retInts, path, retStrings, retBuffer = vrep.simxCallScriptFunction(sim_client, 'remoteApiCommandServer',
+  res, retInts, path, retStrings, retBuffer = vrep.simxCallScriptFunction(sim_client, 'planningApi',
                                                                           vrep.sim_scripttype_childscript, 'findIkPath',
                                                                           inInts, inFloats, [], EMPTY_BUFF,
                                                                           VREP_BLOCKING)
