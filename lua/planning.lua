@@ -18,19 +18,79 @@ function sysCall_init()
     minConfigsForIkPath=2
 end
 
-generateIkPath=function()
+generateIkPath=function(goalPose)
     -- Generates (if possible) a linear, collision free path between a robot config and a target pose
+    sim.setObjectMatrix(ikTarget,-1,goalPose)
     local c=sim.generateIkPath(ikGroup,jointHandles,minConfigsForIkPath,collisionPairs)
     return c
 end
 
 findIkPath=function(inInts,inFloats,inStrings,inBuffer)
-    local path=generateIkPath()
+    local goalPose = {}
+    for i=1,12,1 do goalPose[i]=inFloats[i] end
+
+    local path=generateIkPath(goalPose)
     if not path then
         return {0},{},{},''
     end
     return {#path},path,{},''
 end
+
+findCollisionFreeConfig=function(task)
+    -- Here we search for a robot configuration..
+    -- 1. ..that matches the desired pose (task.goalPose)
+    -- 2. ..that does not collide in that configuration
+    sim.setObjectMatrix(task.ikTarget,-1,task.goalPose)
+    -- Here we check point 1 & 2:
+    local c=sim.getConfigForTipPose(task.ikGroup,task.jh,0.65,20,nil,task.collisionPairs)
+    return c
+end
+
+findSeveralCollisionFreeConfigs=function(task)
+    -- Here we search for several robot configurations...
+    -- 1. ..that matches the desired pose (task.goalPose)
+    -- 2. ..that does not collide in that configuration
+    sim.setObjectMatrix(task.ikTarget,-1,task.goalPose)
+    local cs={}
+    local l={}
+    for i=1,task.maxTrialsForConfigSearch,1 do
+        local c=findCollisionFreeConfig(task)
+        if c then
+            local dist=getConfigConfigDistance(task.currentState,c,task.metric)
+            local p=0
+            local same=false
+            for j=1,#l,1 do
+                if math.abs(l[j]-dist)<0.001 then
+                    -- we might have the exact same config. Avoid that
+                    same=true
+                    for k=1,#task.jh,1 do
+                        if math.abs(cs[j][k]-c[k])>0.01 then
+                            same=false
+                            break
+                        end
+                    end
+                end
+                if same then
+                    break
+                end
+            end
+            if not same then
+                cs[#cs+1]=c
+                l[#l+1]=dist
+            end
+        end
+        if #l>=task.maxConfigsForDesiredPose then
+            break
+        end
+    end
+    if #cs==0 then
+        cs=nil
+    end
+    return cs
+end
+
+-----------------------------------------------------------------------------------------------
+
 
 getConfig=function(jointHandles)
     local config={}
