@@ -87,7 +87,7 @@ class UR5(object):
 
   def setTargetPose(self, pose):
     position = pose[:3, -1]
-    orientation = np.asarray(transformations.euler_from_matrix(pose))
+    orientation = np.asarray(transformations.euler_from_matrix(pose, 'rxyz'))
     utils.setObjectPosition(self.sim_client, self.UR5_target, position)
     utils.setObjectOrientation(self.sim_client, self.UR5_target, orientation)
 
