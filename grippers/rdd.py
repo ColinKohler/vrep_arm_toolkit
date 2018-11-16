@@ -50,13 +50,13 @@ class RDD(object):
     utils.setJointTargetVelocity(self.sim_client, self.finger_joint_narrow, self.open_velocity_narrow)
     utils.setJointTargetVelocity(self.sim_client, self.finger_joint_wide, self.open_velocity_wide)
 
-    sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
-    sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
+    sim_ret, p_narrow = utils.getJointPosition(self.sim_client, self.finger_joint_narrow)
+    sim_ret, p_wide = utils.getJointPosition(self.sim_client, self.finger_joint_wide)
 
     i = 0
     while p_narrow > self.joint_limit_narrow[0] or p_wide < self.joint_limit_wide[1]:
-      sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
-      sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
+      sim_ret, p_narrow = utils.getJointPosition(self.sim_client, self.finger_joint_narrow)
+      sim_ret, p_wide = utils.getJointPosition(self.sim_client, self.finger_joint_wide)
       i += 1
 
       if i > 25:
@@ -66,10 +66,10 @@ class RDD(object):
     if finger is RDD.WIDE:
       utils.setJointForce(self.sim_client, self.finger_joint_wide, self.open_force)
       utils.setJointTargetVelocity(self.sim_client, self.finger_joint_wide, self.open_velocity_wide)
-      sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
+      sim_ret, p_wide = utils.getJointPosition(self.sim_client, self.finger_joint_wide)
       i = 0
       while p_wide < self.joint_limit_wide[1]:
-        sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
+        sim_ret, p_wide = utils.getJointPosition(self.sim_client, self.finger_joint_wide)
         i += 1
         if i > 25:
           break
@@ -77,10 +77,10 @@ class RDD(object):
     else:
       utils.setJointForce(self.sim_client, self.finger_joint_narrow, self.open_force)
       utils.setJointTargetVelocity(self.sim_client, self.finger_joint_narrow, self.open_velocity_narrow)
-      sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
+      sim_ret, p_narrow = utils.getJointPosition(self.sim_client, self.finger_joint_narrow)
       i = 0
       while p_narrow > self.joint_limit_narrow[0]:
-        sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
+        sim_ret, p_narrow = utils.getJointPosition(self.sim_client, self.finger_joint_narrow)
         i += 1
         if i > 25:
           break
@@ -96,12 +96,12 @@ class RDD(object):
     utils.setJointTargetVelocity(self.sim_client, self.finger_joint_narrow, self.close_velocity_narrow)
     utils.setJointTargetVelocity(self.sim_client, self.finger_joint_wide, self.close_velocity_wide)
 
-    sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
-    sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
+    sim_ret, p_narrow = utils.getJointPosition(self.sim_client, self.finger_joint_narrow)
+    sim_ret, p_wide = utils.getJointPosition(self.sim_client, self.finger_joint_wide)
 
     while p_narrow < self.joint_limit_narrow[1] or p_wide > self.joint_limit_wide[0]:
-      sim_ret, p_narrow_ = utils.getJointPosition(sim_client, self.finger_joint_narrow)
-      sim_ret, p_wide_ = utils.getJointPosition(sim_client, self.finger_joint_wide)
+      sim_ret, p_narrow_ = utils.getJointPosition(self.sim_client, self.finger_joint_narrow)
+      sim_ret, p_wide_ = utils.getJointPosition(self.sim_client, self.finger_joint_wide)
 
       if p_narrow_ <= p_narrow and p_wide_ >= p_wide:
         return False
@@ -112,11 +112,11 @@ class RDD(object):
 
   def getFingerPosition(self, finger):
     if finger is RDD.NARROW:
-      sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
+      sim_ret, p_narrow = utils.getJointPosition(self.sim_client, self.finger_joint_narrow)
       return p_narrow
 
     else:
-      sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
+      sim_ret, p_wide = utils.getJointPosition(self.sim_client, self.finger_joint_wide)
       return p_wide
 
 if __name__ == '__main__':
