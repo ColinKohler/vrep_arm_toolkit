@@ -65,7 +65,7 @@ class UR5(object):
     num_move_steps = int(np.floor(move_magnitude / 0.01))
 
     # Calculate the rotation increments
-    rotation = np.asarray(transformations.euler_from_matrix(pose))
+    rotation = np.asarray(transformations.euler_from_matrix(pose, 'rxyz'))
     rotation_step = rotation - UR5_target_orientation
     rotation_step[rotation > 0] = 0.1
     rotation_step[rotation < 0] = -0.1
