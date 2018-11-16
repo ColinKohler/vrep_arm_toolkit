@@ -44,8 +44,14 @@ if __name__ == '__main__':
 
   current_pos = ur5.getEndEffectorPose()
   target_pos = current_pos.copy()
-  target_pos[1, -1] += 0.3
+  target_pos[2, -1] -= 0.1
 
-  path = findIkPath(sim_client, target_pos)
-  if len(path)>0:
-    ur5.followPath(path)
+  # path = findIkPath(sim_client, target_pos)
+  # if len(path)>0:
+  #   ur5.followPath(path)
+
+  configs = findIkSolution(sim_client, target_pos)
+  for config in configs:
+    ur5.setJointPosition(config)
+  pass
+

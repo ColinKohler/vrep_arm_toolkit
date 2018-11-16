@@ -26,3 +26,14 @@ def findIkPath(sim_client, target_pose):
                                                                           VREP_BLOCKING)
   path = np.reshape(np.array(path), (-1, 6))
   return path
+
+def findIkSolution(sim_client, target_pose):
+  target_pose = target_pose.flatten().tolist()[:-4]
+  inInts = []
+  inFloats = target_pose
+  res, retInts, configs, retStrings, retBuffer = vrep.simxCallScriptFunction(sim_client, 'planningApi',
+                                                                             vrep.sim_scripttype_childscript, 'findIk',
+                                                                             inInts, inFloats, [], EMPTY_BUFF,
+                                                                             VREP_BLOCKING)
+  configs = np.reshape(np.array(configs), (-1, 6))
+  return configs

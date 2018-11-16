@@ -13,9 +13,12 @@ function sysCall_init()
     ikGroup=sim.getIkGroupHandle('UR5')
     ikTip=sim.getObjectHandle('UR5_tip')
     ikTarget=sim.getObjectHandle('UR5_target')
-    collisionPairs={sim.getCollectionHandle('UR5'),sim.getCollectionHandle('not_UR5')}
-
+    --collisionPairs={sim.getCollectionHandle('UR5'),sim.getCollectionHandle('not_UR5')}
+    collisionPairs=nil
+    
     minConfigsForIkPath=2
+    maxTrialsForConfigSearch=10
+    maxConfigsForDesiredPose=8
 end
 
 generateIkPath=function(goalPose)
@@ -36,34 +39,50 @@ findIkPath=function(inInts,inFloats,inStrings,inBuffer)
     return {#path},path,{},''
 end
 
-findCollisionFreeConfig=function(task)
+findCollisionFreeConfig=function(goalPose)
     -- Here we search for a robot configuration..
     -- 1. ..that matches the desired pose (task.goalPose)
     -- 2. ..that does not collide in that configuration
-    sim.setObjectMatrix(task.ikTarget,-1,task.goalPose)
+    sim.setObjectMatrix(ikTarget,-1,goalPose)
     -- Here we check point 1 & 2:
-    local c=sim.getConfigForTipPose(task.ikGroup,task.jh,0.65,20,nil,task.collisionPairs)
+    local c=sim.getConfigForTipPose(ikGroup,jointHandles,0.65,20,nil,collisionPairs)
+    print(c)
     return c
 end
 
-findSeveralCollisionFreeConfigs=function(task)
-    -- Here we search for several robot configurations...
-    -- 1. ..that matches the desired pose (task.goalPose)
-    -- 2. ..that does not collide in that configuration
-    sim.setObjectMatrix(task.ikTarget,-1,task.goalPose)
+getConfigConfigDistance=function(config1,config2)
+    metric={1,1,1,1,1,1}
+    local d=0
+    for i=1,#config1,1 do
+        local dx=(config1[i]-config2[i])*metric[i]
+        d=d+dx*dx
+    end
+    return math.sqrt(d)
+end
+
+getConfig=function()
+    local config={}
+    for i=1,#jointHandles,1 do
+        config[i]=sim.getJointPosition(jointHandles[i])
+    end
+    return config
+end
+
+findSeveralCollisionFreeConfigs=function(goalPose)
+    sim.setObjectMatrix(ikTarget,-1,goalPose)
     local cs={}
     local l={}
-    for i=1,task.maxTrialsForConfigSearch,1 do
-        local c=findCollisionFreeConfig(task)
+    for i=1,maxTrialsForConfigSearch,1 do
+        local c=findCollisionFreeConfig(goalPose)
         if c then
-            local dist=getConfigConfigDistance(task.currentState,c,task.metric)
+            local dist=getConfigConfigDistance(getConfig(),c)
             local p=0
             local same=false
             for j=1,#l,1 do
                 if math.abs(l[j]-dist)<0.001 then
                     -- we might have the exact same config. Avoid that
                     same=true
-                    for k=1,#task.jh,1 do
+                    for k=1,#jointHandles,1 do
                         if math.abs(cs[j][k]-c[k])>0.01 then
                             same=false
                             break
@@ -79,7 +98,7 @@ findSeveralCollisionFreeConfigs=function(task)
                 l[#l+1]=dist
             end
         end
-        if #l>=task.maxConfigsForDesiredPose then
+        if #l>=maxConfigsForDesiredPose then
             break
         end
     end
@@ -89,16 +108,28 @@ findSeveralCollisionFreeConfigs=function(task)
     return cs
 end
 
+findIk=function(inInts,inFloats,inStrings,inBuffer)
+    local goalPose = {}
+    for i=1,12,1 do goalPose[i]=inFloats[i] end
+
+    local configs=findSeveralCollisionFreeConfigs(goalPose)
+    if not configs then
+        return {0},{},{},''
+    end
+    local outConfigs=configs[1]
+    for i=2,#configs,1 do
+        for j=1,6,1 do
+            outConfigs[#outConfigs+1]=configs[i][j]
+        end
+    end
+    print(outConfigs)
+    return {#outConfigs},outConfigs,{},''
+end
+
 -----------------------------------------------------------------------------------------------
 
 
-getConfig=function(jointHandles)
-    local config={}
-    for i=1,#jointHandles,1 do
-        config[i]=sim.getJointPosition(jointHandles[i])
-    end
-    return config
-end
+
 
 setConfig=function(jointHandles,config)
     if config then
@@ -108,14 +139,7 @@ setConfig=function(jointHandles,config)
     end
 end
 
-getConfigConfigDistance=function(config1,config2,metric)
-    local d=0
-    for i=1,#config1,1 do
-        local dx=(config1[i]-config2[i])*metric[i]
-        d=d+dx*dx
-    end
-    return math.sqrt(d)
-end
+
 
 getPathLength=function(path,metric)
     local d=0
@@ -129,58 +153,8 @@ getPathLength=function(path,metric)
     return d
 end
 
-findCollisionFreeConfig=function(task)
-    -- Here we search for a robot configuration..
-    -- 1. ..that matches the desired pose (task.goalPose)
-    -- 2. ..that does not collide in that configuration
-    sim.setObjectMatrix(task.ikTarget,-1,task.goalPose)
-    -- Here we check point 1 & 2:
-    local c=sim.getConfigForTipPose(task.ikGroup,task.jh,0.65,20,nil,task.collisionPairs)
-    return c
-end
 
-findSeveralCollisionFreeConfigs=function(task)
-    -- Here we search for several robot configurations...
-    -- 1. ..that matches the desired pose (task.goalPose)
-    -- 2. ..that does not collide in that configuration
-    sim.setObjectMatrix(task.ikTarget,-1,task.goalPose)
-    local cs={}
-    local l={}
-    for i=1,task.maxTrialsForConfigSearch,1 do
-        local c=findCollisionFreeConfig(task)
-        if c then
-            local dist=getConfigConfigDistance(task.currentState,c,task.metric)
-            local p=0
-            local same=false
-            for j=1,#l,1 do
-                if math.abs(l[j]-dist)<0.001 then
-                    -- we might have the exact same config. Avoid that
-                    same=true
-                    for k=1,#task.jh,1 do
-                        if math.abs(cs[j][k]-c[k])>0.01 then
-                            same=false
-                            break
-                        end
-                    end
-                end
-                if same then
-                    break
-                end
-            end
-            if not same then
-                cs[#cs+1]=c
-                l[#l+1]=dist
-            end
-        end
-        if #l>=task.maxConfigsForDesiredPose then
-            break
-        end
-    end
-    if #cs==0 then
-        cs=nil
-    end
-    return cs
-end
+
 
 findOnePath=function(task,goalConfigs)
     local omplTask=simOMPL.createTask('omplTask')
