@@ -11,6 +11,7 @@ class UR5(object):
   '''
   VRep UR5 robot class. Works with any gripper included in this package.
   Currently only does IK control.
+
   Args:
     - sim_client: VRep client object to communicate with simulator over
     - gripper: Gripper which is attached to UR5 in simulator. Must be included in 'grippers'
@@ -26,6 +27,7 @@ class UR5(object):
   def getEndEffectorPose(self):
     '''
     Get the current end effector pose
+
     Returns: 4D pose of the gripper
     '''
     sim_ret, pose = utils.getObjectPose(self.sim_client, self.UR5_target)
@@ -40,6 +42,7 @@ class UR5(object):
   def closeGripper(self):
     '''
     Closes the gripper as much as is possible
+
     Returns: True if gripper is fully closed, False otherwise
     '''
     return self.gripper.close()
@@ -47,6 +50,7 @@ class UR5(object):
   def moveTo(self, pose):
     '''
     Moves the tip of the gripper to the target pose
+
     Args:
       - pose: 4D target pose
     '''
@@ -79,9 +83,11 @@ class UR5(object):
   def pick(self, grasp_pose, offset):
     '''
     Attempts to execute a pick at the target pose
+
     Args:
       - grasp_pose: 4D pose to execture grasp at
       - offset: Grasp offset for pre-grasp pose
+
     Returns: True if pick was successful, False otherwise
     '''
     pre_grasp_pose = np.copy(grasp_pose)
@@ -101,6 +107,7 @@ class UR5(object):
   def place(self, drop_pose, offset):
     '''
     Attempts to execute a place at the target pose
+
     Args:
       - drop_pose: 4D pose to place object at
       - offset: Grasp offset for pre-grasp pose
