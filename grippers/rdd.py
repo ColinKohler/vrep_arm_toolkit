@@ -3,7 +3,6 @@ import numpy as np
 import time
 import vrep_arm_toolkit.utils.vrep_utils as utils
 from vrep_arm_toolkit.simulation import vrep
-from vrep_arm_toolkit.joints.joint import Joint
 
 VREP_BLOCKING = vrep.simx_opmode_blocking
 
@@ -38,25 +37,26 @@ class RDD(object):
     self.joint_limit_narrow = (-1.04, -0.04)
     self.joint_limit_wide = (0.04, 1.04)
 
-    self.finger_joint_narrow = Joint(sim_client, 'RDD_narrow_finger_joint')
-    self.finger_joint_wide = Joint(sim_client, 'RDD_wide_finger_joint')
+    sim_ret, self.finger_joint_narrow = utils.getObjectHandle(self.sim_client, 'RDD_narrow_finger_joint')
+    sim_ret, self.finger_joint_wide = utils.getObjectHandle(self.sim_client, 'RDD_wide_finger_joint')
 
   def open(self):
     """
     Open the gripper as much as is possible
     """
-    self.finger_joint_narrow.setJointForce(self.open_force)
-    self.finger_joint_narrow.setJointTargetVelocity(self.open_velocity_narrow)
-    self.finger_joint_wide.setJointForce(self.open_force)
-    self.finger_joint_wide.setJointTargetVelocity(self.open_velocity_wide)
+    utils.setJointForce(self.sim_client, self.finger_joint_narrow, self.open_force)
+    utils.setJointForce(self.sim_client, self.finger_joint_wide, self.open_force)
 
-    p_narrow = self.finger_joint_narrow.getJointPosition()
-    p_wide = self.finger_joint_wide.getJointPosition()
+    utils.setJointTargetVelocity(self.sim_client, self.finger_joint_narrow, self.open_velocity_narrow)
+    utils.setJointTargetVelocity(self.sim_client, self.finger_joint_wide, self.open_velocity_wide)
+
+    sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
+    sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
 
     i = 0
     while p_narrow > self.joint_limit_narrow[0] or p_wide < self.joint_limit_wide[1]:
-      p_narrow = self.finger_joint_narrow.getJointPosition()
-      p_wide = self.finger_joint_wide.getJointPosition()
+      sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
+      sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
       i += 1
 
       if i > 25:
@@ -64,23 +64,23 @@ class RDD(object):
 
   def openFinger(self, finger):
     if finger is RDD.WIDE:
-      self.finger_joint_wide.setJointForce(self.open_force)
-      self.finger_joint_wide.setJointTargetVelocity(self.open_velocity_wide)
-      p_wide = self.finger_joint_wide.getJointPosition()
+      utils.setJointForce(self.sim_client, self.finger_joint_wide, self.open_force)
+      utils.setJointTargetVelocity(self.sim_client, self.finger_joint_wide, self.open_velocity_wide)
+      sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
       i = 0
       while p_wide < self.joint_limit_wide[1]:
-        p_wide = self.finger_joint_wide.getJointPosition()
+        sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
         i += 1
         if i > 25:
           break
 
     else:
-      self.finger_joint_narrow.setJointForce(self.open_force)
-      self.finger_joint_narrow.setJointTargetVelocity(self.open_velocity_narrow)
-      p_narrow = self.finger_joint_narrow.getJointPosition()
+      utils.setJointForce(self.sim_client, self.finger_joint_narrow, self.open_force)
+      utils.setJointTargetVelocity(self.sim_client, self.finger_joint_narrow, self.open_velocity_narrow)
+      sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
       i = 0
       while p_narrow > self.joint_limit_narrow[0]:
-        p_narrow = self.finger_joint_narrow.getJointPosition()
+        sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
         i += 1
         if i > 25:
           break
@@ -90,17 +90,18 @@ class RDD(object):
     Close the gripper as much as is possible
     :return: True if gripper is fully closed, False otherwise
     """
-    self.finger_joint_narrow.setJointForce(self.close_force)
-    self.finger_joint_narrow.setJointTargetVelocity(self.close_velocity_narrow)
-    self.finger_joint_wide.setJointForce(self.close_force)
-    self.finger_joint_wide.setJointTargetVelocity(self.close_velocity_wide)
+    utils.setJointForce(self.sim_client, self.finger_joint_narrow, self.close_force)
+    utils.setJointForce(self.sim_client, self.finger_joint_wide, self.close_force)
 
-    p_narrow = self.finger_joint_narrow.getJointPosition()
-    p_wide = self.finger_joint_wide.getJointPosition()
+    utils.setJointTargetVelocity(self.sim_client, self.finger_joint_narrow, self.close_velocity_narrow)
+    utils.setJointTargetVelocity(self.sim_client, self.finger_joint_wide, self.close_velocity_wide)
+
+    sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
+    sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
 
     while p_narrow < self.joint_limit_narrow[1] or p_wide > self.joint_limit_wide[0]:
-      p_narrow_ = self.finger_joint_narrow.getJointPosition()
-      p_wide_ = self.finger_joint_wide.getJointPosition()
+      sim_ret, p_narrow_ = utils.getJointPosition(sim_client, self.finger_joint_narrow)
+      sim_ret, p_wide_ = utils.getJointPosition(sim_client, self.finger_joint_wide)
 
       if p_narrow_ <= p_narrow and p_wide_ >= p_wide:
         return False
@@ -109,6 +110,15 @@ class RDD(object):
 
     return True
 
+  def getFingerPosition(self, finger):
+    if finger is RDD.NARROW:
+      sim_ret, p_narrow = utils.getJointPosition(sim_client, self.finger_joint_narrow)
+      return p_narrow
+
+    else:
+      sim_ret, p_wide = utils.getJointPosition(sim_client, self.finger_joint_wide)
+      return p_wide
+
 if __name__ == '__main__':
   # Attempt to connect to simulator
   sim_client = utils.connectToSimulation('127.0.0.1', 19997)
@@ -116,9 +126,12 @@ if __name__ == '__main__':
   rdd = RDD(sim_client)
 
   vrep.simxStopSimulation(sim_client, VREP_BLOCKING)
-  time.sleep(2)
+  time.sleep(1)
   vrep.simxStartSimulation(sim_client, VREP_BLOCKING)
-  time.sleep(2)
+  time.sleep(1)
 
   rdd.open()
   print rdd.close()
+
+  rdd.openFinger(RDD.NARROW)
+  rdd.openFinger(RDD.WIDE)
