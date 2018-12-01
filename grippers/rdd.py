@@ -40,10 +40,13 @@ class RDD(object):
     sim_ret, self.finger_joint_narrow = utils.getObjectHandle(self.sim_client, 'RDD_narrow_finger_joint')
     sim_ret, self.finger_joint_wide = utils.getObjectHandle(self.sim_client, 'RDD_wide_finger_joint')
 
-  def open(self):
+  def open(self, target_position=1.04):
     """
     Open the gripper as much as is possible
     """
+    joint_limit_narrow = -target_position
+    joint_limit_wide = target_position
+
     utils.setJointForce(self.sim_client, self.finger_joint_narrow, self.open_force)
     utils.setJointForce(self.sim_client, self.finger_joint_wide, self.open_force)
 
@@ -54,13 +57,17 @@ class RDD(object):
     sim_ret, p_wide = utils.getJointPosition(self.sim_client, self.finger_joint_wide)
 
     i = 0
-    while p_narrow > self.joint_limit_narrow[0] or p_wide < self.joint_limit_wide[1]:
+    while p_narrow > joint_limit_narrow and p_wide < joint_limit_wide:
       sim_ret, p_narrow = utils.getJointPosition(self.sim_client, self.finger_joint_narrow)
       sim_ret, p_wide = utils.getJointPosition(self.sim_client, self.finger_joint_wide)
       i += 1
 
       if i > 25:
         break
+
+    utils.setJointTargetVelocity(self.sim_client, self.finger_joint_narrow, 0)
+    utils.setJointTargetVelocity(self.sim_client, self.finger_joint_wide, 0)
+
 
   def openFinger(self, finger):
     if finger is RDD.WIDE:
@@ -121,7 +128,7 @@ class RDD(object):
 
 if __name__ == '__main__':
   # Attempt to connect to simulator
-  sim_client = utils.connectToSimulation('127.0.0.1', 19997)
+  sim_client = utils.connectToSimulation('127.0.0.1', 19998)
 
   rdd = RDD(sim_client)
 

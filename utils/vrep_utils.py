@@ -146,6 +146,10 @@ def getJointPosition(sim_client, joint):
   sim_ret, position = vrep.simxGetJointPosition(sim_client, joint, VREP_BLOCKING)
   return sim_ret, position
 
+def getJointForce(sim_client, joint):
+  sim_ret, force = vrep.simxGetJointForce(sim_client, joint, VREP_BLOCKING)
+  return sim_ret, force
+
 # Sets a joints force to a given force
 def setJointForce(sim_client, joint, force):
   return vrep.simxSetJointForce(sim_client, joint, force, VREP_BLOCKING)
