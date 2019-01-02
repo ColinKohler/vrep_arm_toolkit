@@ -26,8 +26,21 @@ class RG2(object):
     self.close_force = close_force
     self.close_velocity = close_velocity
 
-    # Get gripper actuation joint
+    # Get gripper actuation joint and target dummy object
     sim_ret, self.gripper_joint = utils.getObjectHandle(self.sim_client, 'RG2_openCloseJoint')
+    sim_ret, self.gripper_tip = utils.getObjectHandle(self.sim_client, 'UR5_tip')
+
+  def getPosition(self):
+    '''
+    Get position of the top of the gripper
+    '''
+    return utils.getObjectPosition(self.sim_client, self.gripper_tip)
+
+  def getJointPosition(self):
+    '''
+    Get the joint position of the gripper
+    '''
+    return utils.getJointPosition(self.sim_client, self.gripper_joint)
 
   def open(self):
     '''
@@ -59,7 +72,7 @@ class RG2(object):
 
     # Wait until gripper is fully closed
     sim_ret, p1 = utils.getJointPosition(self.sim_client, self.gripper_joint)
-    while p1 > -0.047:
+    while p1 > -0.046:
       sim_ret, p1_ = utils.getJointPosition(self.sim_client, self.gripper_joint)
       if p1_ >= p1:
         return False

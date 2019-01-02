@@ -30,7 +30,7 @@ class UR5(object):
 
     Returns: 4D pose of the gripper
     '''
-    sim_ret, pose = utils.getObjectPose(self.sim_client, self.UR5_target)
+    sim_ret, pose = utils.getObjectPose(self.sim_client, self.gripper_tip)
     return pose
 
   def openGripper(self):
@@ -99,8 +99,7 @@ class UR5(object):
     self.moveTo(grasp_pose)
     is_fully_closed = self.closeGripper()
     self.moveTo(pre_grasp_pose)
-
-    is_full_closed = self.closeGripper()
+    is_fully_closed = self.closeGripper()
 
     return not is_fully_closed
 

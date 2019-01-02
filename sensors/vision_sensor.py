@@ -111,6 +111,7 @@ class VisionSensor(object):
       return None
 
     depth_img = self.getDepthData()
+    depth_img = np.fliplr(depth_img)
     depth_h, depth_w = depth_img.shape
 
     # Project depth into 3D point cloud in camera coordinates
@@ -181,6 +182,7 @@ class VisionSensor(object):
     color_heightmap_g[heightmap_pix_y, heightmap_pix_x] = rgb_pts[:,[1]]
     color_heightmap_b[heightmap_pix_y, heightmap_pix_x] = rgb_pts[:,[2]]
     color_heightmap = np.concatenate((color_heightmap_r, color_heightmap_g, color_heightmap_b), axis=2)
+
     depth_heightmap[heightmap_pix_y, heightmap_pix_x] = depth_pts[:,2]
     depth_heightmap -= self.workspace[2,0]
     depth_heightmap[depth_heightmap < 0] = 0
