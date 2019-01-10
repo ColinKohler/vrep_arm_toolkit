@@ -62,14 +62,14 @@ class UR5(object):
     move_direction = pose[:3,-1] - UR5_target_position
     move_magnitude = np.linalg.norm(move_direction)
     move_step = 0.01 * move_direction / move_magnitude
-    num_move_steps = int(np.floor(move_magnitude / 0.01))
+    num_move_steps = int(np.ceil(move_magnitude / 0.01))
 
     # Calculate the rotation increments
     rotation = np.asarray(transformations.euler_from_matrix(pose))
     rotation_step = rotation - UR5_target_orientation
-    rotation_step[rotation > 0] = 0.1
+    rotation_step[rotation >= 0] = 0.1
     rotation_step[rotation < 0] = -0.1
-    num_rotation_steps = np.floor((rotation - UR5_target_orientation) / rotation_step).astype(np.int)
+    num_rotation_steps = np.ceil((rotation - UR5_target_orientation) / rotation_step).astype(np.int)
 
     # Move and rotate to the target pose
     for i in range(max(num_move_steps, np.max(num_rotation_steps))):
@@ -79,6 +79,10 @@ class UR5(object):
              UR5_target_orientation[2]+rotation_step[2]*min(i, num_rotation_steps[2])]
       utils.setObjectPosition(self.sim_client, self.UR5_target, pos)
       utils.setObjectOrientation(self.sim_client, self.UR5_target, rot)
+
+    utils.setObjectPosition(self.sim_client, self.UR5_target, pose[:3,-1])
+    utils.setObjectOrientation(self.sim_client, self.UR5_target, rotation)
+
 
   def pick(self, grasp_pose, offset):
     '''
