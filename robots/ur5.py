@@ -47,7 +47,7 @@ class UR5(object):
     '''
     return self.gripper.close()
 
-  def moveTo(self, pose):
+  def moveTo(self, pose, move_step_size=0.01, single_step=False):
     '''
     Moves the tip of the gripper to the target pose
 
@@ -61,8 +61,8 @@ class UR5(object):
     # Calculate the movement increments
     move_direction = pose[:3,-1] - UR5_target_position
     move_magnitude = np.linalg.norm(move_direction)
-    move_step = 0.01 * move_direction / move_magnitude
-    num_move_steps = int(np.ceil(move_magnitude / 0.01))
+    move_step = move_step_size * move_direction / move_magnitude
+    num_move_steps = int(np.ceil(move_magnitude / move_step_size))
 
     # Calculate the rotation increments
     rotation = np.asarray(transformations.euler_from_matrix(pose))
@@ -72,25 +72,27 @@ class UR5(object):
     num_rotation_steps = np.ceil((rotation - UR5_target_orientation) / rotation_step).astype(np.int)
 
     # Move and rotate to the target pose
-    for i in range(max(num_move_steps, np.max(num_rotation_steps))):
-      pos = UR5_target_position + move_step*min(i, num_move_steps)
-      rot = [UR5_target_orientation[0]+rotation_step[0]*min(i, num_rotation_steps[0]),
-             UR5_target_orientation[1]+rotation_step[1]*min(i, num_rotation_steps[1]),
-             UR5_target_orientation[2]+rotation_step[2]*min(i, num_rotation_steps[2])]
-      utils.setObjectPosition(self.sim_client, self.UR5_target, pos)
-      utils.setObjectOrientation(self.sim_client, self.UR5_target, rot)
+    if not single_step:
+      for i in range(max(num_move_steps, np.max(num_rotation_steps))):
+        pos = UR5_target_position + move_step*min(i, num_move_steps)
+        rot = [UR5_target_orientation[0]+rotation_step[0]*min(i, num_rotation_steps[0]),
+               UR5_target_orientation[1]+rotation_step[1]*min(i, num_rotation_steps[1]),
+               UR5_target_orientation[2]+rotation_step[2]*min(i, num_rotation_steps[2])]
+        utils.setObjectPosition(self.sim_client, self.UR5_target, pos)
+        utils.setObjectOrientation(self.sim_client, self.UR5_target, rot)
 
     utils.setObjectPosition(self.sim_client, self.UR5_target, pose[:3,-1])
     utils.setObjectOrientation(self.sim_client, self.UR5_target, rotation)
 
 
-  def pick(self, grasp_pose, offset):
+  def pick(self, grasp_pose, offset, fast_mode=False):
     '''
     Attempts to execute a pick at the target pose
 
     Args:
       - grasp_pose: 4D pose to execture grasp at
       - offset: Grasp offset for pre-grasp pose
+      - fast_mode: Teleport the arm when it doesn't interact with other objects.
 
     Returns: True if pick was successful, False otherwise
     '''
@@ -99,21 +101,25 @@ class UR5(object):
     pre_grasp_pose[2,-1] += offset
 
     self.openGripper()
-    self.moveTo(pre_grasp_pose)
+    self.moveTo(pre_grasp_pose, single_step=fast_mode)
     self.moveTo(grasp_pose)
     is_fully_closed = self.closeGripper()
-    self.moveTo(pre_grasp_pose)
+    if is_fully_closed:
+      self.moveTo(pre_grasp_pose, single_step=fast_mode)
+    else:
+      self.moveTo(pre_grasp_pose, single_step=False)
     is_fully_closed = self.closeGripper()
 
     return not is_fully_closed
 
-  def place(self, drop_pose, offset):
+  def place(self, drop_pose, offset, fast_mode=False):
     '''
     Attempts to execute a place at the target pose
 
     Args:
       - drop_pose: 4D pose to place object at
       - offset: Grasp offset for pre-grasp pose
+      - fast_mode: Teleport the arm when it doesn't interact with other objects.
     '''
     pre_drop_pose = np.copy(drop_pose)
     pre_drop_pose[2,-1] += offset
@@ -121,4 +127,4 @@ class UR5(object):
     self.moveTo(pre_drop_pose)
     self.moveTo(drop_pose)
     self.openGripper()
-    self.moveTo(pre_drop_pose)
+    self.moveTo(pre_drop_pose, single_step=fast_mode)
