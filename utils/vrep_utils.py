@@ -125,6 +125,9 @@ def getObjectPosition(sim_client, obj_handle):
 def setObjectPosition(sim_client, obj_handle, position):
   return vrep.simxSetObjectPosition(sim_client, obj_handle, -1, position, VREP_BLOCKING)
 
+def setObjectPositionOneShot(sim_client, obj_handle, position):
+  return vrep.simxSetObjectPosition(sim_client, obj_handle, -1, position, VREP_ONESHOT)
+
 # Returns the object orientation as numpy array
 def getObjectOrientation(sim_client, obj_handle):
   sim_ret, orientation = vrep.simxGetObjectOrientation(sim_client, obj_handle, -1, VREP_BLOCKING)
@@ -157,3 +160,6 @@ def setJointForce(sim_client, joint, force):
 # Sets a joints target velocity to a given velocity
 def setJointTargetVelocity(sim_client, joint, velocity):
   return vrep.simxSetJointTargetVelocity(sim_client, joint, velocity, VREP_BLOCKING)
+
+def setJointTargetPosition(sim_client, joint, position):
+  return vrep.simxSetJointTargetPosition(sim_client, joint, position, VREP_ONESHOT)

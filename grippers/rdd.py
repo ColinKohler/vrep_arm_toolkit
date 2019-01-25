@@ -65,9 +65,12 @@ class RDD(object):
       if i > 25:
         break
 
-    utils.setJointTargetVelocity(self.sim_client, self.finger_joint_narrow, 0)
-    utils.setJointTargetVelocity(self.sim_client, self.finger_joint_wide, 0)
-
+  def setFingerPos(self, target_position=1.04):
+    target_position_narrow = -target_position
+    target_position_wide = target_position
+    utils.setJointTargetPosition(self.sim_client, self.finger_joint_narrow, target_position_narrow)
+    utils.setJointTargetPosition(self.sim_client, self.finger_joint_wide, target_position_wide)
+    return
 
   def openFinger(self, finger):
     if finger is RDD.WIDE:
